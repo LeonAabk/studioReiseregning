@@ -379,6 +379,11 @@ function calculateAll() {
     if (elOther) elOther.textContent = currencyFormatter.format(totalOther);
     if (elGrand) elGrand.textContent = currencyFormatter.format(totalMileage + diet.amount + totalOther);
     
+    const elMobileSub = document.getElementById('mobile-subtotal-summary');
+    if (elMobileSub) {
+        elMobileSub.textContent = `Kj: ${currencyFormatter.format(totalMileage)} · D: ${currencyFormatter.format(diet.amount)} · Ut: ${currencyFormatter.format(totalOther)}`;
+    }
+    
     const dietSummary = document.getElementById('diet-summary');
     if (dietSummary) {
         dietSummary.textContent = diet.text;
@@ -511,6 +516,10 @@ function initCanvas() {
     window.addEventListener('mouseup', stop);
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); }, { passive: false });
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, { passive: false });
+    canvas.addEventListener('touchend', (e) => { e.preventDefault(); stop(); }, { passive: false });
+    canvas.addEventListener('touchcancel', (e) => { e.preventDefault(); stop(); }, { passive: false });
+    window.addEventListener('touchend', stop);
+    window.addEventListener('touchcancel', stop);
 }
 
 function clearCanvas() {
@@ -685,7 +694,7 @@ function previewExpenseReport() {
                         ${companyHeader}
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <div class="doc-meta-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
                         <div>
                             <span class="doc-meta-label">Ansattinformasjon</span>
                             <p style="margin: 4px 0 0 0; font-weight: 700; color: #0f172a;">${escapeHTML(data.personalInfo.name)}</p>

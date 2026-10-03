@@ -1366,47 +1366,396 @@ td input:focus {
     }
 }
 
-/* Responsiveness */
+/* Base helper classes for mobile */
+.mobile-scroll-hint {
+    display: none;
+}
+.mobile-subtotal-summary {
+    display: none;
+}
+
+/* Responsiveness & Mobile Phone Optimizations */
 @media (max-width: 768px) {
     body {
-        padding: 14px 12px 160px 12px;
+        padding: 10px 10px calc(80px + env(safe-area-inset-bottom, 0px)) 10px;
+        -webkit-tap-highlight-color: transparent;
     }
 
+    /* iOS Auto-Zoom prevention: ensure 16px minimum on touch inputs */
+    input, select, textarea {
+        font-size: 16px !important;
+        min-height: 44px;
+    }
+
+    td input[type="text"],
+    td input[type="number"] {
+        font-size: 16px !important;
+        min-height: 40px;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+    }
+
+    /* Mobile Cards */
+    .card {
+        padding: 16px 14px;
+        margin-bottom: 14px;
+        border-radius: var(--radius-md);
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+
+    .card-header-title {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-header h2 {
+        font-size: 1.05rem;
+    }
+
+    .card-header .action-group {
+        width: 100%;
+        display: flex;
+        gap: 8px;
+    }
+
+    .card-header .action-group .btn {
+        flex: 1;
+        min-height: 42px;
+        justify-content: center;
+        font-size: 0.82rem;
+    }
+
+    /* Mobile Form Grids */
+    .grid-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    /* Diett Checkbox Chips: thumb-friendly touch targets */
+    .checkbox-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .checkbox-group label {
+        min-height: 44px;
+        padding: 9px 12px;
+        font-size: 0.85rem;
+        flex: 1;
+        min-width: 110px;
+        justify-content: center;
+    }
+
+    .checkbox-group label:has(input:checked) {
+        background: var(--accent-subtle);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    /* Table Horizontal Scroll Cue */
+    .mobile-scroll-hint {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.74rem;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table-responsive {
+        border-radius: var(--radius-md);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #mileage-table {
+        min-width: 670px;
+    }
+
+    #expenses-table,
+    .table-responsive table {
+        min-width: 480px;
+    }
+
+    td button.btn-text {
+        min-height: 40px;
+        min-width: 44px;
+        padding: 6px 8px;
+        font-size: 0.85rem;
+    }
+
+    /* Header & Navigation on Mobile */
     .main-header {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .brand-zone {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
     }
 
     .nav-links-zone {
+        display: flex;
+        gap: 6px;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
         padding-bottom: 2px;
+        width: 100%;
+    }
+
+    .nav-links-zone::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-link {
+        padding: 7px 12px;
+        font-size: 0.82rem;
+        min-height: 38px;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .header-actions {
         width: 100%;
-        justify-content: stretch;
+    }
+
+    .header-actions .action-group {
+        display: flex;
+        gap: 6px;
+        width: 100%;
+        flex-wrap: wrap;
     }
 
     .header-actions .btn {
         flex: 1;
+        min-height: 40px;
+        font-size: 0.82rem;
+        justify-content: center;
+        padding: 8px 10px;
+        white-space: nowrap;
     }
 
+    /* Presets bar */
     .quick-presets-bar {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        padding: 10px 12px;
+        gap: 8px;
     }
 
-    .totals-grid {
-        gap: 12px;
+    .presets-buttons {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 6px;
+        width: 100%;
+        padding-bottom: 2px;
     }
 
-    .total-value {
-        font-size: 1rem;
+    .presets-buttons::-webkit-scrollbar {
+        display: none;
     }
 
+    .btn-preset {
+        padding: 7px 12px;
+        min-height: 38px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Vipps card */
     .vipps-compact-card {
         flex-direction: column;
         align-items: flex-start;
+        padding: 12px;
+    }
+
+    /* Sticky Summary Thumb Bar */
+    .sticky-summary {
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px;
+        max-height: none;
+    }
+
+    .sticky-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+
+    .totals-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .totals-grid .total-item:not(.highlight) {
+        display: none;
+    }
+
+    .total-item.highlight {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .total-item.highlight .total-label {
+        font-size: 0.65rem;
+        color: #fde68a;
+        margin-bottom: 1px;
+        white-space: nowrap;
+        line-height: 1;
+    }
+
+    .total-item.highlight .total-value {
+        font-size: 1.15rem;
+        line-height: 1.15;
+        white-space: nowrap;
+    }
+
+    .mobile-subtotal-summary {
+        display: block;
+        font-size: 0.68rem;
+        color: #cbd5e1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 135px;
+    }
+
+    .sticky-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .sticky-actions .btn {
+        padding: 8px 10px;
+        font-size: 0.78rem;
+        min-height: 42px;
+        border-radius: var(--radius-md);
+        white-space: nowrap;
+    }
+
+    /* Mobile Sheet Modals */
+    .modal-overlay {
+        padding: 6px;
+        align-items: flex-end;
+    }
+
+    .modal-content {
+        max-height: 94vh;
+        width: 100%;
+        border-radius: 16px 16px 8px 8px;
+    }
+
+    .modal-header {
+        padding: 12px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .modal-header .action-group {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .modal-header .action-group .btn {
+        flex: 1;
+        min-width: 100px;
+        min-height: 40px;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 7px 8px;
+    }
+
+    .modal-body {
+        padding: 14px 12px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .email-channel-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .btn-email-channel {
+        padding: 10px 8px;
+        min-height: 52px;
+    }
+
+    .btn-email-channel .channel-sub {
+        margin-left: 0;
+        margin-top: 2px;
+    }
+
+    .doc-meta-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .signature-section {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
+    }
+
+    .sig-box {
+        width: 100% !important;
+        max-width: 220px;
+    }
+
+    /* Toast Position on Mobile (above sticky bar) */
+    #toast-container {
+        bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+        left: 12px !important;
+        right: 12px !important;
+    }
+
+    .toast {
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* Signature Canvas on Phone */
+    #sig-canvas {
+        height: 130px;
+    }
+
+    .tab-btn {
+        min-height: 42px;
+        padding: 8px 14px;
+        font-size: 0.86rem;
     }
 }
