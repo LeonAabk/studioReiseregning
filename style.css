@@ -1130,16 +1130,6 @@ td input:focus {
     border-color: var(--accent-color);
 }
 
-.btn-email-channel.share-native {
-    background: #f0fdf4;
-    color: #15803d;
-    border-color: #86efac;
-}
-.btn-email-channel.share-native:hover {
-    background: #dcfce7;
-    border-color: #22c55e;
-}
-
 .email-preview-box {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
