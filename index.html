@@ -52,34 +52,38 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                         Forhåndsvis PDF
                     </button>
+                    <button type="button" class="btn btn-success btn-small" onclick="openSendToAccountantModal()" title="Send reiseregningen ferdig spesifisert til regnskapsfører">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        Send til regnskap
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- Hurtigmaler Toolbar (Kompakt og intuitivt) -->
+        <!-- Verktøylinje: Eksempelreise, CSV og Tøm skjema -->
         <section class="quick-presets-bar no-print">
             <div class="presets-label">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                <span>Hurtigmaler:</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-color);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Hurtigvalg:</span>
             </div>
             <div class="presets-buttons">
-                <button type="button" class="btn-preset" onclick="loadTemplate('bergen')" title="Fyll ut eksempel med bilkjøring, hotell og utlegg">
-                    Kundemøte Bergen (Bil & Hotell)
-                </button>
-                <button type="button" class="btn-preset" onclick="loadTemplate('oslo')" title="Fyll ut eksempel for dagsreise med tog og dagsdiett">
-                    Dagstur Oslo (Dagsdiett & Tog)
-                </button>
-                <button type="button" class="btn-preset" onclick="loadTemplate('trondheim')" title="Fyll ut eksempel med privat overnatting">
-                    Trondheim (Privat)
+                <button type="button" class="btn-preset" onclick="loadExampleTrip()" title="Fyll ut en komplett eksempelreise og se hvordan skjemaet fungerer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-color);"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    Vis eksempelreise (gjennomgang)
                 </button>
                 <button type="button" class="btn-preset" onclick="exportToCSV()" title="Last ned gjeldende reiseregning som CSV">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Last ned CSV
                 </button>
-                <button type="button" class="btn-preset danger" onclick="loadTemplate('clear')" title="Tøm alle felter">
+                <button type="button" class="btn-clear-blue" onclick="clearForm()" title="Nullstill alle felter i skjemaet">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     Tøm skjema
                 </button>
             </div>
         </section>
+
+        <!-- Eksempelreise Gjennomgangs-banner (vises ved klikk på Eksempelreise) -->
+        <div id="example-walkthrough-container" class="no-print" style="display: none;"></div>
 
         <!-- Kompakt Auth / Sky-konto Seksjon (Skjult som standard, åpnes ved behov) -->
         <div id="auth-panel-wrapper" class="no-print" style="display: none; margin-bottom: 20px;">
@@ -155,6 +159,10 @@
                     <div class="form-group">
                         <label for="emp-dept">Avdeling / Prosjekt</label>
                         <input type="text" id="emp-dept" placeholder="F.eks. Rådgivning">
+                    </div>
+                    <div class="form-group">
+                        <label for="emp-account">Kontonr (utbetaling)</label>
+                        <input type="text" id="emp-account" placeholder="F.eks. 1234.56.78901">
                     </div>
                 </div>
             </section>
@@ -398,7 +406,11 @@
                         Forhåndsvis PDF
                     </button>
                     <button type="button" class="btn btn-primary" onclick="saveExpenseReport()" style="background: #2563eb;">
-                        Lagre reise
+                        Lagre
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="openSendToAccountantModal()" title="Send reiseregningen ferdig spesifisert til regnskapsfører">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        Send til regnskap
                     </button>
                 </div>
             </div>

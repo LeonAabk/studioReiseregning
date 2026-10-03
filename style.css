@@ -251,10 +251,94 @@ h4 { font-size: 0.9rem; }
     background: var(--accent-subtle);
 }
 
-.btn-preset.danger:hover {
-    border-color: var(--danger-color);
-    color: var(--danger-color);
-    background: var(--danger-subtle);
+/* Blue button for Tøm skjema */
+.btn-clear-blue {
+    background-color: var(--accent-subtle);
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-clear-blue:hover {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border-color: var(--accent-hover);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Eksempelreise Gjennomgangs-banner */
+.walkthrough-banner {
+    background: #ffffff;
+    border: 1px solid var(--accent-border);
+    border-left: 4px solid var(--accent-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    animation: fadeInSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.walkthrough-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.walkthrough-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.walkthrough-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.walkthrough-step {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 0.83rem;
+    line-height: 1.45;
+}
+
+.walkthrough-step strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 3px;
+    font-size: 0.85rem;
+}
+
+.walkthrough-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
 }
 
 /* Compact Auth Bar & Expander */

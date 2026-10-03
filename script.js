@@ -599,7 +599,8 @@ function collectFormData() {
             name: document.getElementById('emp-name') ? document.getElementById('emp-name').value : '',
             id: document.getElementById('emp-id') ? document.getElementById('emp-id').value : '',
             department: document.getElementById('emp-dept') ? document.getElementById('emp-dept').value : '',
-            address: document.getElementById('emp-addr') ? document.getElementById('emp-addr').value : ''
+            address: document.getElementById('emp-addr') ? document.getElementById('emp-addr').value : '',
+            account: document.getElementById('emp-account') ? document.getElementById('emp-account').value : ''
         },
         travelInfo: {
             purpose: document.getElementById('travel-purpose') ? document.getElementById('travel-purpose').value : '',
@@ -654,6 +655,7 @@ function previewExpenseReport() {
         <h3 style="margin: 0; color: #0f172a;">${escapeHTML(data.personalInfo.company) || 'Reiseregning'}</h3>
         <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.85rem;">Ref / Ansattnr: ${escapeHTML(data.personalInfo.id) || '-'}</p>
         <p style="margin: 2px 0 0 0; color: #64748b; font-size: 0.85rem;">Avdeling: ${escapeHTML(data.personalInfo.department) || '-'}</p>
+        ${data.personalInfo.account ? `<p style="margin: 2px 0 0 0; color: #0f172a; font-weight: 600; font-size: 0.85rem;">Kontonr: ${escapeHTML(data.personalInfo.account)}</p>` : ''}
     </div>`;
 
     const modal = document.createElement('div');
@@ -666,6 +668,10 @@ function previewExpenseReport() {
                 <div class="action-group">
                     <button type="button" class="btn btn-outline" onclick="exportToCSV()">Last ned CSV</button>
                     <button type="button" class="btn btn-primary" onclick="window.print()">Skriv ut / PDF</button>
+                    <button type="button" class="btn btn-success" onclick="closeModal(); openSendToAccountantModal();" title="Send reiseregningen ferdig spesifisert til regnskapsfører">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        Send til regnskap
+                    </button>
                     <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
                 </div>
             </div>
@@ -825,7 +831,8 @@ function savePersonalInfo() {
         name: document.getElementById('emp-name') ? document.getElementById('emp-name').value : '',
         id: document.getElementById('emp-id') ? document.getElementById('emp-id').value : '',
         department: document.getElementById('emp-dept') ? document.getElementById('emp-dept').value : '',
-        address: document.getElementById('emp-addr') ? document.getElementById('emp-addr').value : ''
+        address: document.getElementById('emp-addr') ? document.getElementById('emp-addr').value : '',
+        account: document.getElementById('emp-account') ? document.getElementById('emp-account').value : ''
     };
     localStorage.setItem('personalInfo', JSON.stringify(personalInfo));
     showToast("Personopplysningene er lagret på denne enheten!", "success");
@@ -841,6 +848,7 @@ function loadPersonalInfo() {
             if (document.getElementById('emp-id')) document.getElementById('emp-id').value = info.id || '';
             if (document.getElementById('emp-dept')) document.getElementById('emp-dept').value = info.department || '';
             if (document.getElementById('emp-addr')) document.getElementById('emp-addr').value = info.address || '';
+            if (document.getElementById('emp-account')) document.getElementById('emp-account').value = info.account || '';
         }
     } catch (e) {
         console.error("Feil ved innlasting av personinfo", e);
@@ -1018,17 +1026,34 @@ async function showSavedReports() {
             </div>
             <div class="modal-body">
                 <div style="display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <button type="button" id="tab-saved-cloud" class="btn btn-primary btn-small" onclick="switchSavedTab('cloud')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                        Sky-synkroniserte (${currentUser ? cloudTrips.length : 'Logg inn'})
+                    </button>
                     <button type="button" id="tab-saved-local" class="btn btn-outline btn-small" onclick="switchSavedTab('local')">
                         Lokale kladder (${localTrips.length})
                     </button>
-                    <button type="button" id="tab-saved-cloud" class="btn btn-ghost btn-small" onclick="switchSavedTab('cloud')">
-                        Sky-synkroniserte (${currentUser ? cloudTrips.length : 'Logg inn'})
-                    </button>
                 </div>
 
-                <div id="saved-tab-content-local">
+                <div id="saved-tab-content-cloud" style="display: block;">
+                    ${!currentUser ? `
+                        <div class="empty-state" style="padding: 26px 18px; text-align: center;">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 10px auto; color: var(--accent-color); display: block;"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                            <h3 style="margin-bottom: 6px; font-size: 1.05rem;">Sky-synkroniserte reiser</h3>
+                            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 440px; margin: 0 auto 16px auto;">
+                                Sky-synkronisering lagrer reiseregningene dine trygt og gjør dem tilgjengelige fra alle dine enheter. Logg inn eller opprett konto for å se reisene dine.
+                            </p>
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-primary btn-small" onclick="closeModal(); toggleAuthPanel();">Logg inn / Registrer</button>
+                                <button type="button" class="btn btn-outline btn-small" onclick="switchSavedTab('local')">Se lokale kladder (${localTrips.length})</button>
+                            </div>
+                        </div>
+                    ` : renderTripsTable(cloudTrips, true)}
+                </div>
+
+                <div id="saved-tab-content-local" style="display: none;">
                     <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
-                        Disse reisene er lagret direkte i nettleseren din og er tilgjengelige uten internettilkobling.
+                        Disse reisene er lagret direkte i nettleseren på denne maskinen og er tilgjengelige uten internett.
                     </p>
                     ${renderTripsTable(localTrips, false)}
                     
@@ -1037,15 +1062,6 @@ async function showSavedReports() {
                             Eksporter JSON-sikkerhetskopi
                         </button>
                     </div>
-                </div>
-
-                <div id="saved-tab-content-cloud" style="display: none;">
-                    ${!currentUser ? `
-                        <div class="empty-state">
-                            <p>Du må være logget inn for å få tilgang til reiser lagret i skyen.</p>
-                            <button type="button" class="btn btn-primary btn-small" onclick="closeModal(); document.getElementById('auth-email').focus();">Logg inn nå</button>
-                        </div>
-                    ` : renderTripsTable(cloudTrips, true)}
                 </div>
             </div>
         </div>
@@ -1061,15 +1077,15 @@ function switchSavedTab(tab) {
     const tabLocal = document.getElementById('tab-saved-local');
     const tabCloud = document.getElementById('tab-saved-cloud');
 
-    if (tab === 'local') {
-        if (localContent) localContent.style.display = 'block';
-        if (cloudContent) cloudContent.style.display = 'none';
-        if (tabLocal) { tabLocal.className = 'btn btn-outline btn-small'; }
-        if (tabCloud) { tabCloud.className = 'btn btn-ghost btn-small'; }
-    } else {
+    if (tab === 'cloud') {
         if (localContent) localContent.style.display = 'none';
         if (cloudContent) cloudContent.style.display = 'block';
-        if (tabLocal) { tabLocal.className = 'btn btn-ghost btn-small'; }
+        if (tabCloud) { tabCloud.className = 'btn btn-primary btn-small'; }
+        if (tabLocal) { tabLocal.className = 'btn btn-outline btn-small'; }
+    } else {
+        if (localContent) localContent.style.display = 'block';
+        if (cloudContent) cloudContent.style.display = 'none';
+        if (tabLocal) { tabLocal.className = 'btn btn-primary btn-small'; }
         if (tabCloud) { tabCloud.className = 'btn btn-outline btn-small'; }
     }
 }
@@ -1148,6 +1164,7 @@ function loadTrip(tripRecordStr) {
             safeSetVal('emp-id', trip.personalInfo.id);
             safeSetVal('emp-dept', trip.personalInfo.department);
             safeSetVal('emp-addr', trip.personalInfo.address);
+            safeSetVal('emp-account', trip.personalInfo.account);
         }
 
         if (trip.travelInfo) {
@@ -1206,120 +1223,182 @@ function loadTrip(tripRecordStr) {
     }
 }
 
-// --- 8. HURTIGMALER (PRESETS) ---
-function loadTemplate(type) {
-    if (type === 'clear') {
-        if (!confirm("Vil du nullstille hele skjemaet og starte på nytt?")) return;
-        resetFormState();
-        
-        const safeSetVal = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.value = val;
-        };
+// --- 8. EKSEMPELREISE & VEILEDNINGSGJENNOMGANG ---
+function clearForm() {
+    if (!confirm("Vil du nullstille hele skjemaet og starte med et tomt dokument?")) return;
+    resetFormState();
+    
+    const safeSetVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    };
 
-        safeSetVal('travel-purpose', '');
-        safeSetVal('travel-event', '');
-        safeSetVal('accommodation-name', '');
-        safeSetVal('accommodation-type', 'hotel');
-        safeSetVal('diet-mode', 'state');
+    safeSetVal('travel-purpose', '');
+    safeSetVal('travel-event', '');
+    safeSetVal('accommodation-name', '');
+    safeSetVal('accommodation-type', 'hotel');
+    safeSetVal('diet-mode', 'state');
 
-        const depDate = document.getElementById('departure-date');
-        if (depDate && depDate._flatpickr) depDate._flatpickr.clear();
-        const retDate = document.getElementById('return-date');
-        if (retDate && retDate._flatpickr) retDate._flatpickr.clear();
+    const depDate = document.getElementById('departure-date');
+    if (depDate && depDate._flatpickr) depDate._flatpickr.clear();
+    const retDate = document.getElementById('return-date');
+    if (retDate && retDate._flatpickr) retDate._flatpickr.clear();
 
-        document.querySelectorAll('.meal-check').forEach(cb => { cb.checked = false; });
+    document.querySelectorAll('.meal-check').forEach(cb => { cb.checked = false; });
 
-        addMileageRow();
-        addExpenseRow();
-        calculateAll();
-        showToast("Skjemaet er tømt.", "info");
-        return;
-    }
+    addMileageRow();
+    addExpenseRow();
+    calculateAll();
+    closeWalkthroughBanner();
+    showToast("Skjemaet er tømt.", "info");
+}
 
+function drawSampleSignature() {
+    const canvas = document.getElementById('sig-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    clearCanvas();
+    
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    ctx.beginPath();
+    ctx.moveTo(40, 70);
+    ctx.bezierCurveTo(60, 20, 80, 20, 95, 75);
+    ctx.bezierCurveTo(110, 110, 130, 110, 150, 60);
+    ctx.bezierCurveTo(170, 30, 185, 80, 210, 65);
+    ctx.bezierCurveTo(240, 50, 270, 75, 310, 60);
+    ctx.moveTo(35, 95);
+    ctx.lineTo(290, 85);
+    ctx.stroke();
+    
+    canvasHasContent = true;
+}
+
+function loadExampleTrip() {
     resetFormState();
 
-    const nameEl = document.getElementById('emp-name');
-    if (nameEl && !nameEl.value) nameEl.value = "Ola Nordmann";
+    const safeSetVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+    };
 
-    const compEl = document.getElementById('emp-company');
-    if (compEl && !compEl.value) compEl.value = "Nordic Solutions AS";
+    // 1. Personopplysninger
+    safeSetVal('emp-name', "Ola Nordmann");
+    safeSetVal('emp-addr', "Storgata 10, 0182 Oslo");
+    safeSetVal('emp-company', "Nordic Solutions AS");
+    safeSetVal('emp-id', "1042");
+    safeSetVal('emp-dept', "Rådgivning & Prosjekt");
+    safeSetVal('emp-account', "1234.56.78901");
 
-    const deptEl = document.getElementById('emp-dept');
-    if (deptEl && !deptEl.value) deptEl.value = "Rådgivning & Utvikling";
+    // 2. Reiseinformasjon & Diett
+    safeSetVal('travel-purpose', "Kundemøte og systemimplementasjon");
+    safeSetVal('travel-event', "Kvartalsvis statusmøte Bergen");
+    safeSetVal('accommodation-type', "hotel");
+    safeSetVal('accommodation-name', "Radisson Blu Hotel Norge, Nedre Ole Bulls plass 4, Bergen");
+    safeSetVal('diet-mode', "state");
 
-    const addrEl = document.getElementById('emp-addr');
-    if (addrEl && !addrEl.value) addrEl.value = "Storgata 10, 0182 Oslo";
+    const dep = document.getElementById('departure-date');
+    if (dep && dep._flatpickr) dep._flatpickr.setDate("2026-10-01 07:30");
+    const ret = document.getElementById('return-date');
+    if (ret && ret._flatpickr) ret._flatpickr.setDate("2026-10-03 16:30");
 
-    const empIdEl = document.getElementById('emp-id');
-    if (empIdEl && !empIdEl.value) empIdEl.value = "1042";
+    // Frokost dekket av hotell (-20% måltidstrekk)
+    document.querySelectorAll('.meal-check').forEach((cb, idx) => {
+        cb.checked = (idx === 0);
+    });
 
-    if (type === 'bergen') {
-        document.getElementById('travel-purpose').value = "Kundemøte og systemimplementasjon";
-        document.getElementById('travel-event').value = "Kvartalsvis statusmøte Bergen";
-        document.getElementById('accommodation-type').value = "hotel";
-        document.getElementById('accommodation-name').value = "Radisson Blu Hotel Norge, Nedre Ole Bulls plass 4, Bergen";
-        document.getElementById('diet-mode').value = "state";
+    // 3. Kjøregodtgjørelse (Bil)
+    addMileageRow({ from: "Oslo", to: "Bergen", km: "465", pass: "Kari Konsulent", toll: "280", date: "2026-10-01 07:30" });
+    addMileageRow({ from: "Bergen", to: "Oslo", km: "465", pass: "", toll: "280", date: "2026-10-03 11:30" });
 
-        const dep = document.getElementById('departure-date');
-        if (dep && dep._flatpickr) dep._flatpickr.setDate("2026-10-01 07:30");
-        const ret = document.getElementById('return-date');
-        if (ret && ret._flatpickr) ret._flatpickr.setDate("2026-10-03 16:30");
+    // 4. Andre utlegg
+    addExpenseRow({ date: "2026-10-02", description: "Parkering ByGarasjen Bergen (2 døgn)", amount: "580", receipt: true });
+    addExpenseRow({ date: "2026-10-02", description: "Drosje til kveldsarrangement", amount: "240", receipt: true });
 
-        // Frokost dekket av hotell
-        document.querySelectorAll('.meal-check').forEach((cb, idx) => {
-            cb.checked = (idx === 0);
-        });
-
-        addMileageRow({ from: "Oslo", to: "Bergen", km: "465", pass: "Kari Konsulent", toll: "280", date: "2026-10-01 07:30" });
-        addMileageRow({ from: "Bergen", to: "Oslo", km: "465", pass: "", toll: "280", date: "2026-10-03 11:30" });
-
-        addExpenseRow({ date: "2026-10-02", description: "Parkering ByGarasjen Bergen (2 døgn)", amount: "580", receipt: true });
-        addExpenseRow({ date: "2026-10-02", description: "Drosje til kveldsarrangement", amount: "240", receipt: true });
-
-        showToast("Eksempel: 'Kundemøte Bergen' lastet inn!", "success");
-    } else if (type === 'oslo') {
-        document.getElementById('travel-purpose').value = "Dagsmøte i departementet";
-        document.getElementById('travel-event').value = "Høringsmøte om nye satser";
-        document.getElementById('accommodation-type').value = "none";
-        document.getElementById('accommodation-name').value = "";
-        document.getElementById('diet-mode').value = "state";
-
-        const dep = document.getElementById('departure-date');
-        if (dep && dep._flatpickr) dep._flatpickr.setDate("2026-10-02 06:45");
-        const ret = document.getElementById('return-date');
-        if (ret && ret._flatpickr) ret._flatpickr.setDate("2026-10-02 21:15");
-
-        // Lunsj dekket
-        document.querySelectorAll('.meal-check').forEach((cb, idx) => {
-            cb.checked = (idx === 1);
-        });
-
-        addExpenseRow({ date: "2026-10-02", description: "Togbillett Vy Tønsberg - Oslo S t/r", amount: "540", receipt: true });
-        addExpenseRow({ date: "2026-10-02", description: "Ruter 24-timers billett sone 1", amount: "131", receipt: true });
-
-        showToast("Eksempel: 'Dagstur Oslo' lastet inn!", "success");
-    } else if (type === 'trondheim') {
-        document.getElementById('travel-purpose').value = "Oppfølging av prosjektgruppe NTNU";
-        document.getElementById('travel-event').value = "Forskningssamling Trondheim";
-        document.getElementById('accommodation-type').value = "private";
-        document.getElementById('accommodation-name').value = "Privat overnatting";
-        document.getElementById('diet-mode').value = "state";
-
-        const dep = document.getElementById('departure-date');
-        if (dep && dep._flatpickr) dep._flatpickr.setDate("2026-10-01 08:00");
-        const ret = document.getElementById('return-date');
-        if (ret && ret._flatpickr) ret._flatpickr.setDate("2026-10-02 18:00");
-
-        document.querySelectorAll('.meal-check').forEach(cb => { cb.checked = false; });
-
-        addExpenseRow({ date: "2026-10-01", description: "Flybuss Værnes - Trondheim Sentrum", amount: "220", receipt: true });
-        addExpenseRow({ date: "2026-10-02", description: "Flybuss Trondheim Sentrum - Værnes", amount: "220", receipt: true });
-
-        showToast("Eksempel: 'Prosjekt Trondheim' lastet inn!", "success");
-    }
+    // 6. Signatur og bekreftelse
+    safeSetVal('final-date-place', "Oslo, 03.10.2026");
+    drawSampleSignature();
 
     calculateAll();
+    showWalkthroughBanner();
+    showToast("Eksempelreise lastet inn med full gjennomgang!", "success");
+}
+
+function showWalkthroughBanner() {
+    const container = document.getElementById('example-walkthrough-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="walkthrough-banner">
+            <div class="walkthrough-header">
+                <div>
+                    <div class="walkthrough-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-color);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span>Eksempelreise &ndash; Slik fungerer reiseregningen</span>
+                    </div>
+                    <p style="margin: 3px 0 0 0; font-size: 0.86rem; color: var(--text-muted);">
+                        Skjemaet er nå ferdig utfylt som en illustrasjon. Her ser du hvordan de ulike delene fungerer sammen:
+                    </p>
+                </div>
+                <button type="button" class="btn-text btn-small" onclick="closeWalkthroughBanner()" title="Lukk veiledning" style="font-size: 1.2rem; line-height: 1; padding: 2px 6px;">&times;</button>
+            </div>
+
+            <div class="walkthrough-grid">
+                <div class="walkthrough-step">
+                    <strong>1. Person- og firmainfo</strong>
+                    Fyll ut navn, adresse og firma. Bruk «Husk mine data» i kontomenyen for automatisk gjenbruk ved fremtidige reiser.
+                </div>
+                <div class="walkthrough-step">
+                    <strong>2. Automatisk diett 2026</strong>
+                    Avreise og hjemkomst kalkulerer automatisk 2 døgn + 9t overskytende etter Statens satser. Frokostkrysset trekker 20%.
+                </div>
+                <div class="walkthrough-step">
+                    <strong>3. Kjøregodtgjørelse</strong>
+                    5,30 kr/km + 1,00 kr/km for passasjer + bompenger regnes ut per etappe. «+ Legg til returreise» snur automatisk ruten.
+                </div>
+                <div class="walkthrough-step">
+                    <strong>4. Utlegg & kvitteringer</strong>
+                    Før opp parkering, taxi eller billetter. Opplastede kvitteringsbilder legges automatisk til som vedleggssider i PDF-en.
+                </div>
+                <div class="walkthrough-step">
+                    <strong>5. PDF & CSV eksport</strong>
+                    Signer direkte i signaturfeltet. Trykk «Forhåndsvis PDF» for utskriftsklar offentlig blankett, eller last ned som CSV-regneark.
+                </div>
+            </div>
+
+            <div class="walkthrough-actions">
+                <button type="button" class="btn btn-primary btn-small" onclick="previewExpenseReport()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Forhåndsvis PDF-blankett nå
+                </button>
+                <button type="button" class="btn-clear-blue" onclick="clearForm()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Tøm skjema (start på nytt)
+                </button>
+                <button type="button" class="btn btn-ghost btn-small" onclick="closeWalkthroughBanner()">
+                    Lukk denne veiledningen
+                </button>
+            </div>
+        </div>
+    `;
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeWalkthroughBanner() {
+    const container = document.getElementById('example-walkthrough-container');
+    if (container) container.style.display = 'none';
+}
+
+function loadTemplate(type) {
+    if (type === 'clear') {
+        clearForm();
+    } else {
+        loadExampleTrip();
+    }
 }
 
 // --- 9. MODAL: STATENS SATSER 2026 ---
@@ -1514,6 +1593,7 @@ function exportToCSV() {
     csvContent += `Firma;${cleanStr(data.personalInfo.company)}\n`;
     csvContent += `Ansattnr;${cleanStr(data.personalInfo.id)}\n`;
     csvContent += `Avdeling;${cleanStr(data.personalInfo.department)}\n`;
+    if (data.personalInfo.account) csvContent += `Kontonummer;${cleanStr(data.personalInfo.account)}\n`;
     csvContent += `Formål;${cleanStr(data.travelInfo.purpose)}\n`;
     csvContent += `Periode;${cleanStr(data.travelInfo.departure)} til ${cleanStr(data.travelInfo.return)}\n`;
     csvContent += `\n`;
@@ -1572,6 +1652,302 @@ function exportToCSV() {
     URL.revokeObjectURL(link.href);
 
     showToast("CSV-fil lastet ned!", "success");
+}
+
+// --- 12. SEND TIL REGNSKAPSFØRER ---
+function generateAccountantEmailText(comment = '') {
+    const data = collectFormData();
+    const diet = calculateDiet();
+    let totalM = data.mileage.reduce((sum, i) => sum + (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll, 0);
+    let totalE = data.expenses.reduce((sum, i) => sum + i.amount, 0);
+    let grandTotal = totalM + diet.amount + totalE;
+
+    let text = `Hei,\n\nHer oversendes reiseregning for ${data.personalInfo.name || 'ansatt'}.\n\n`;
+
+    if (comment && comment.trim()) {
+        text += `MERKNAD FRA DEN REISENDE:\n${comment.trim()}\n\n`;
+    }
+
+    text += `1. REISE- OG PERSONOPPLYSNINGER\n`;
+    text += `--------------------------------------------------\n`;
+    text += `Navn: ${data.personalInfo.name}\n`;
+    if (data.personalInfo.company) text += `Firma / Arbeidsgiver: ${data.personalInfo.company}\n`;
+    if (data.personalInfo.id) text += `Ansattnummer / Ref: ${data.personalInfo.id}\n`;
+    if (data.personalInfo.department) text += `Avdeling / Prosjekt: ${data.personalInfo.department}\n`;
+    if (data.personalInfo.address) text += `Adresse: ${data.personalInfo.address}\n`;
+    if (data.personalInfo.account) text += `Kontonummer for utbetaling: ${data.personalInfo.account}\n`;
+    text += `Formål med reisen: ${data.travelInfo.purpose}\n`;
+    if (data.travelInfo.event) text += `Arrangement / Møte: ${data.travelInfo.event}\n`;
+    text += `Periode: ${data.travelInfo.departure || '-'} til ${data.travelInfo.return || '-'}\n`;
+    if (data.travelInfo.accommodationName) text += `Overnatting: ${data.travelInfo.accommodationName}\n`;
+    text += `\n`;
+
+    text += `2. SPESIFIKASJON OG BEREGNING (Statens satser 2026)\n`;
+    text += `--------------------------------------------------\n`;
+
+    // Diett
+    text += `DIETTGODTGJØRELSE: ${currencyFormatter.format(diet.amount)}\n`;
+    text += `Spesifikasjon: ${diet.text}\n\n`;
+
+    // Kjøring
+    text += `KJØREGODTGJØRELSE: ${currencyFormatter.format(totalM)}\n`;
+    if (data.mileage && data.mileage.some(m => m.km > 0 || m.toll > 0)) {
+        data.mileage.forEach((m, idx) => {
+            if (m.km > 0 || m.toll > 0) {
+                const legRate = m.passenger.length > 0 ? (RATES.km + RATES.passenger) : RATES.km;
+                const legSum = (m.km * legRate) + m.toll;
+                text += `  • Etappe ${idx + 1}: ${m.date || ''} ${m.from} -> ${m.to} (${m.km} km @ ${legRate.toFixed(2)} kr/km`;
+                if (m.passenger) text += `, passasjer: ${m.passenger}`;
+                if (m.toll > 0) text += `, bom: ${m.toll} kr`;
+                text += `) = ${currencyFormatter.format(legSum)}\n`;
+            }
+        });
+    } else {
+        text += `  Ingen kjøring ført.\n`;
+    }
+    text += `\n`;
+
+    // Andre utlegg
+    text += `ANDRE UTLEGG: ${currencyFormatter.format(totalE)}\n`;
+    if (data.expenses && data.expenses.some(e => e.amount > 0 || e.description)) {
+        data.expenses.forEach(e => {
+            if (e.amount > 0 || e.description) {
+                text += `  • ${e.date || ''} ${e.description}: ${currencyFormatter.format(e.amount)} (${e.receipt ? 'Kvittering vedlagt' : 'Uten kvittering'})\n`;
+            }
+        });
+    } else {
+        text += `  Ingen andre utlegg.\n`;
+    }
+    text += `\n`;
+
+    text += `--------------------------------------------------\n`;
+    text += `TOTALT TIL UTBETALING: ${currencyFormatter.format(grandTotal)}\n`;
+    text += `--------------------------------------------------\n`;
+    if (data.personalInfo.account) {
+        text += `Utbetales til bankkonto: ${data.personalInfo.account}\n\n`;
+    }
+
+    text += `Vedlegg: ${data.receipts.length} kvitteringsbilde(r) er lagt ved.\n`;
+    text += `Generert via Reiseregning 2026 (Statens satser).\n`;
+
+    return text;
+}
+
+function openSendToAccountantModal() {
+    const data = collectFormData();
+    if (!data.personalInfo.name || !data.travelInfo.purpose) {
+        showToast("Vennligst fyll ut minst navn og reiseformål før du sender til regnskapsfører.", "error");
+        return;
+    }
+
+    const diet = calculateDiet();
+    let totalM = data.mileage.reduce((sum, i) => sum + (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll, 0);
+    let totalE = data.expenses.reduce((sum, i) => sum + i.amount, 0);
+    let grandTotal = totalM + diet.amount + totalE;
+
+    const savedEmail = localStorage.getItem('reiseregning_accountant_email') || '';
+    const defaultSubject = `Reiseregning 2026 - ${data.personalInfo.name} - ${data.travelInfo.purpose} (${currencyFormatter.format(grandTotal)})`;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'send-accountant-modal';
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 740px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="background: var(--success-subtle); color: var(--success-color); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size: 1.15rem; margin: 0;">Send reiseregning til regnskapsfører</h2>
+                        <span style="font-size: 0.82rem; color: var(--text-muted);">Ferdig oppsatt spesifikasjon og bilag for rask godkjenning</span>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 20px 24px;">
+                <div class="grid-row" style="margin-bottom: 10px;">
+                    <div class="form-group" style="flex: 1.4;">
+                        <label for="acc-email">Regnskapsførerens / Lønnsavdelingens e-post *</label>
+                        <input type="email" id="acc-email" value="${escapeHTML(savedEmail)}" placeholder="f.eks. regnskap@bedrift.no eller ole@regnskapskontor.no" required autofocus>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="acc-cc">Kopi (valgfri e-post)</label>
+                        <input type="email" id="acc-cc" value="${currentUser ? escapeHTML(currentUser.email) : ''}" placeholder="Din egen e-post">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: inline-flex; align-items: center; gap: 7px; font-weight: 500; cursor: pointer; font-size: 0.83rem; color: var(--text-secondary); text-transform: none;">
+                        <input type="checkbox" id="acc-remember-email" ${savedEmail ? 'checked' : ''} style="width: 15px; height: 15px; accent-color: var(--accent-color);">
+                        Husk regnskapsførerens e-postadresse på denne maskinen
+                    </label>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label for="acc-subject">E-post emne</label>
+                    <input type="text" id="acc-subject" value="${escapeHTML(defaultSubject)}">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="acc-comment">Melding / Merknad til regnskapsfører (valgfritt)</label>
+                    <textarea id="acc-comment" rows="2" placeholder="F.eks.: Hei! Her er reiseregning for forrige ukes kundereise. Kvitteringer og spesifikasjon er vedlagt."></textarea>
+                </div>
+
+                <!-- Sammendragskort -->
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 0.83rem; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">Oppsummering som oversendes:</strong>
+                        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--success-color); font-size: 1.1rem;">${currencyFormatter.format(grandTotal)}</span>
+                    </div>
+                    <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5;">
+                        <div><strong>Reisende:</strong> ${escapeHTML(data.personalInfo.name)} ${data.personalInfo.company ? `(${escapeHTML(data.personalInfo.company)})` : ''}</div>
+                        ${data.personalInfo.account ? `<div><strong>Kontonr for utbetaling:</strong> ${escapeHTML(data.personalInfo.account)}</div>` : ''}
+                        <div><strong>Periode & Formål:</strong> ${escapeHTML(data.travelInfo.departure || '-')} til ${escapeHTML(data.travelInfo.return || '-')} &ndash; ${escapeHTML(data.travelInfo.purpose)}</div>
+                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-color); display: flex; gap: 14px; flex-wrap: wrap;">
+                            <span>Kjøring: <strong>${currencyFormatter.format(totalM)}</strong></span>
+                            <span>Diett: <strong>${currencyFormatter.format(diet.amount)}</strong></span>
+                            <span>Utlegg: <strong>${currencyFormatter.format(totalE)}</strong></span>
+                            <span>Vedlegg: <strong>${data.receipts.length} stk</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Handlingsknapper -->
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-primary" onclick="dispatchAccountantEmail('client')" style="flex: 1.4; justify-content: center; padding: 10px 16px; font-weight: 700; font-size: 0.92rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            Åpne i e-post (Outlook / Mail / Gmail)
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="copyAccountantSummary()" style="flex: 1; justify-content: center; font-size: 0.88rem;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Kopier sammendrag
+                        </button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+                        <button type="button" class="btn btn-outline btn-small" onclick="exportToCSV()" title="Last ned CSV-regneark som kan legges ved e-posten" style="flex: 1; justify-content: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Last ned CSV for regnskap
+                        </button>
+                        <button type="button" class="btn btn-outline btn-small" onclick="closeModal(); previewExpenseReport();" title="Åpne PDF-blankett for utskrift eller lagring som PDF" style="flex: 1; justify-content: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            Lagre som PDF for vedlegg
+                        </button>
+                        ${navigator.share ? `
+                        <button type="button" class="btn btn-outline btn-small" onclick="shareWithAccountant()" title="Del direkte via telefonens/nettleserens delefunksjon" style="flex: 0.8; justify-content: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            Del via app
+                        </button>` : ''}
+                    </div>
+
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 6px 0 0 0; text-align: center;">
+                        Tips: Trykk <strong>«Åpne i e-post»</strong> for å åpne e-postprogrammet ditt med all spesifikasjon ferdig utfylt. Legg gjerne ved den nedlastede PDF-en eller CSV-filen.
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.classList.add('modal-open');
+    document.body.appendChild(modal);
+}
+
+function dispatchAccountantEmail(method = 'client') {
+    const emailInput = document.getElementById('acc-email');
+    const ccInput = document.getElementById('acc-cc');
+    const subjectInput = document.getElementById('acc-subject');
+    const commentInput = document.getElementById('acc-comment');
+    const rememberCb = document.getElementById('acc-remember-email');
+
+    const email = emailInput ? emailInput.value.trim() : '';
+    if (!email || !email.includes('@')) {
+        showToast("Vennligst oppgi en gyldig e-postadresse til regnskapsfører.", "error");
+        if (emailInput) emailInput.focus();
+        return;
+    }
+
+    if (rememberCb && rememberCb.checked) {
+        localStorage.setItem('reiseregning_accountant_email', email);
+    } else {
+        localStorage.removeItem('reiseregning_accountant_email');
+    }
+
+    const cc = ccInput ? ccInput.value.trim() : '';
+    const subject = subjectInput && subjectInput.value ? subjectInput.value.trim() : 'Reiseregning 2026';
+    const comment = commentInput ? commentInput.value.trim() : '';
+
+    const bodyText = generateAccountantEmailText(comment);
+
+    // Build mailto URI
+    let mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}`;
+    if (cc) {
+        mailtoUrl += `&cc=${encodeURIComponent(cc)}`;
+    }
+    mailtoUrl += `&body=${encodeURIComponent(bodyText)}`;
+
+    // Open mail client
+    window.location.href = mailtoUrl;
+
+    showToast("E-postprogrammet ditt åpnes nå med ferdig utfylt reiseregning!", "success");
+}
+
+function copyAccountantSummary() {
+    const commentInput = document.getElementById('acc-comment');
+    const comment = commentInput ? commentInput.value.trim() : '';
+    const bodyText = generateAccountantEmailText(comment);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(bodyText).then(() => {
+            showToast("Regnskapssammendraget er kopiert til utklippstavlen!", "success");
+        }).catch(() => {
+            fallbackCopyText(bodyText);
+        });
+    } else {
+        fallbackCopyText(bodyText);
+    }
+}
+
+function fallbackCopyText(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+        document.execCommand('copy');
+        showToast("Regnskapssammendraget er kopiert til utklippstavlen!", "success");
+    } catch (e) {
+        showToast("Kunne ikke kopiere automatisk. Vennligst marker og kopier teksten manuelt.", "error");
+    }
+    document.body.removeChild(ta);
+}
+
+function shareWithAccountant() {
+    const commentInput = document.getElementById('acc-comment');
+    const comment = commentInput ? commentInput.value.trim() : '';
+    const subjectInput = document.getElementById('acc-subject');
+    const subject = subjectInput && subjectInput.value ? subjectInput.value.trim() : 'Reiseregning 2026';
+    const bodyText = generateAccountantEmailText(comment);
+
+    if (navigator.share) {
+        navigator.share({
+            title: subject,
+            text: bodyText
+        }).then(() => {
+            showToast("Reiseregningen ble delt!", "success");
+        }).catch(err => {
+            if (err.name !== 'AbortError') {
+                showToast("Deling avbrutt eller ikke tilgjengelig.", "info");
+            }
+        });
+    } else {
+        copyAccountantSummary();
+    }
 }
 
 window.onclick = function(event) {
