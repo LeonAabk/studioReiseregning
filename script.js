@@ -1753,7 +1753,7 @@ function openSendToAccountantModal() {
     modal.id = 'send-accountant-modal';
 
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 740px;">
+        <div class="modal-content" style="max-width: 760px;">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="background: var(--success-subtle); color: var(--success-color); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -1761,7 +1761,7 @@ function openSendToAccountantModal() {
                     </div>
                     <div>
                         <h2 style="font-size: 1.15rem; margin: 0;">Send reiseregning til regnskapsfører</h2>
-                        <span style="font-size: 0.82rem; color: var(--text-muted);">Ferdig oppsatt spesifikasjon og bilag for rask godkjenning</span>
+                        <span style="font-size: 0.82rem; color: var(--text-muted);">Spesifikasjon og utbetalingsgrunnlag klar til oversendelse</span>
                     </div>
                 </div>
                 <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
@@ -1779,28 +1779,28 @@ function openSendToAccountantModal() {
                     </div>
                 </div>
 
-                <div style="margin-bottom: 14px;">
+                <div style="margin-bottom: 12px;">
                     <label style="display: inline-flex; align-items: center; gap: 7px; font-weight: 500; cursor: pointer; font-size: 0.83rem; color: var(--text-secondary); text-transform: none;">
                         <input type="checkbox" id="acc-remember-email" ${savedEmail ? 'checked' : ''} style="width: 15px; height: 15px; accent-color: var(--accent-color);">
-                        Husk regnskapsførerens e-postadresse på denne maskinen
+                        Husk regnskapsførerens e-postadresse på denne enheten
                     </label>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 14px;">
+                <div class="form-group" style="margin-bottom: 12px;">
                     <label for="acc-subject">E-post emne</label>
                     <input type="text" id="acc-subject" value="${escapeHTML(defaultSubject)}">
                 </div>
 
-                <div class="form-group" style="margin-bottom: 16px;">
+                <div class="form-group" style="margin-bottom: 14px;">
                     <label for="acc-comment">Melding / Merknad til regnskapsfører (valgfritt)</label>
                     <textarea id="acc-comment" rows="2" placeholder="F.eks.: Hei! Her er reiseregning for forrige ukes kundereise. Kvitteringer og spesifikasjon er vedlagt."></textarea>
                 </div>
 
                 <!-- Sammendragskort -->
-                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <strong style="font-size: 0.83rem; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">Oppsummering som oversendes:</strong>
-                        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--success-color); font-size: 1.1rem;">${currencyFormatter.format(grandTotal)}</span>
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="font-size: 0.82rem; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">Oppsummering som oversendes:</strong>
+                        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--success-color); font-size: 1.15rem;">${currencyFormatter.format(grandTotal)}</span>
                     </div>
                     <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5;">
                         <div><strong>Reisende:</strong> ${escapeHTML(data.personalInfo.name)} ${data.personalInfo.company ? `(${escapeHTML(data.personalInfo.company)})` : ''}</div>
@@ -1815,38 +1815,87 @@ function openSendToAccountantModal() {
                     </div>
                 </div>
 
-                <!-- Handlingsknapper -->
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-primary" onclick="dispatchAccountantEmail('client')" style="flex: 1.4; justify-content: center; padding: 10px 16px; font-weight: 700; font-size: 0.92rem;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                            Åpne i e-post (Outlook / Mail / Gmail)
+                <!-- Sende-kanaler -->
+                <div style="margin-bottom: 6px;">
+                    <label style="font-weight: 700; font-size: 0.84rem; color: var(--text-primary); margin-bottom: 8px; display: block;">
+                        Velg hvordan du vil sende eller overføre:
+                    </label>
+                    <div class="email-channel-grid">
+                        <!-- Gmail -->
+                        <button type="button" class="btn-email-channel gmail" onclick="dispatchAccountantEmail('gmail')" title="Åpner direkte i Gmail i nettleseren (anbefalt for Chrome)">
+                            <div class="channel-header">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                                <span>Åpne i Gmail</span>
+                            </div>
+                            <span class="channel-sub">Direkte i nettleseren</span>
                         </button>
-                        <button type="button" class="btn btn-outline" onclick="copyAccountantSummary()" style="flex: 1; justify-content: center; font-size: 0.88rem;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            Kopier sammendrag
+
+                        <!-- Outlook på nett -->
+                        <button type="button" class="btn-email-channel outlook" onclick="dispatchAccountantEmail('outlook')" title="Åpner direkte i Outlook på nett / Microsoft 365">
+                            <div class="channel-header">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="9" y1="4" x2="9" y2="20"></line></svg>
+                                <span>Åpne i Outlook</span>
+                            </div>
+                            <span class="channel-sub">Nett / Microsoft 365</span>
+                        </button>
+
+                        <!-- Lokalt e-postprogram -->
+                        <button type="button" class="btn-email-channel client" onclick="dispatchAccountantEmail('client')" title="Åpner installert e-postprogram som Outlook på PC/Mac eller Apple Mail">
+                            <div class="channel-header">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                <span>E-postprogram</span>
+                            </div>
+                            <span class="channel-sub">Outlook / Apple Mail</span>
+                        </button>
+
+                        <!-- Kopier tekst direkte -->
+                        <button type="button" class="btn-email-channel copy-direct" onclick="copyAccountantSummary()" title="Kopier hele den ferdige spesifikasjonen med ett klikk">
+                            <div class="channel-header">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>Kopier e-posttekst</span>
+                            </div>
+                            <span class="channel-sub">Lim inn i e-post/chat</span>
                         </button>
                     </div>
+                </div>
 
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
-                        <button type="button" class="btn btn-outline btn-small" onclick="exportToCSV()" title="Last ned CSV-regneark som kan legges ved e-posten" style="flex: 1; justify-content: center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            Last ned CSV for regnskap
-                        </button>
-                        <button type="button" class="btn btn-outline btn-small" onclick="closeModal(); previewExpenseReport();" title="Åpne PDF-blankett for utskrift eller lagring som PDF" style="flex: 1; justify-content: center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                            Lagre som PDF for vedlegg
-                        </button>
-                        ${navigator.share ? `
-                        <button type="button" class="btn btn-outline btn-small" onclick="shareWithAccountant()" title="Del direkte via telefonens/nettleserens delefunksjon" style="flex: 0.8; justify-content: center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                            Del via app
-                        </button>` : ''}
+                <!-- Info om tomt Chrome-vindu -->
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 14px; font-size: 0.8rem; color: #166534; display: flex; align-items: flex-start; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <div>
+                        <strong>Løsning for tomt Chrome-vindu:</strong> Hvis Chrome åpnet en tom fane tidligere, skyldes det at Chrome manglet kobling til et lokalt installert e-postprogram. Trykk <strong>«Åpne i Gmail»</strong> eller <strong>«Åpne i Outlook»</strong> for å åpne rett i nettleseren, eller bruk <strong>«Kopier e-posttekst»</strong>.
                     </div>
+                </div>
 
-                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 6px 0 0 0; text-align: center;">
-                        Tips: Trykk <strong>«Åpne i e-post»</strong> for å åpne e-postprogrammet ditt med all spesifikasjon ferdig utfylt. Legg gjerne ved den nedlastede PDF-en eller CSV-filen.
-                    </p>
+                <!-- Forhåndsvisning og redigering av e-posttekst -->
+                <div class="email-preview-box">
+                    <div class="email-preview-header">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">
+                            Forhåndsvisning av teksten som sendes:
+                        </span>
+                        <button type="button" class="btn btn-outline btn-small" onclick="copyAccountantSummary()" style="padding: 3px 10px; font-size: 0.78rem;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Kopier tekst
+                        </button>
+                    </div>
+                    <textarea id="acc-email-preview" class="email-preview-textarea" readonly></textarea>
+                </div>
+
+                <!-- Vedleggsknapper -->
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-outline btn-small" onclick="exportToCSV()" title="Last ned CSV-regneark som kan legges ved e-posten" style="flex: 1; justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Last ned CSV for regnskap
+                    </button>
+                    <button type="button" class="btn btn-outline btn-small" onclick="closeModal(); previewExpenseReport();" title="Åpne PDF-blankett for utskrift eller lagring som PDF" style="flex: 1; justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        Lagre som PDF for vedlegg
+                    </button>
+                    ${navigator.share ? `
+                    <button type="button" class="btn btn-outline btn-small" onclick="shareWithAccountant()" title="Del direkte via telefonens/nettleserens delefunksjon" style="flex: 0.8; justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        Del via app
+                    </button>` : ''}
                 </div>
             </div>
         </div>
@@ -1854,9 +1903,27 @@ function openSendToAccountantModal() {
 
     document.body.classList.add('modal-open');
     document.body.appendChild(modal);
+
+    // Initialiser forhåndsvisning og lytt til endringer i kommentar
+    const commentEl = document.getElementById('acc-comment');
+    const previewEl = document.getElementById('acc-email-preview');
+    if (previewEl) {
+        previewEl.value = generateAccountantEmailText('');
+    }
+    if (commentEl && previewEl) {
+        commentEl.addEventListener('input', () => {
+            previewEl.value = generateAccountantEmailText(commentEl.value);
+        });
+    }
 }
 
-function dispatchAccountantEmail(method = 'client') {
+function copyToClipboardSilent(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+    }
+}
+
+function dispatchAccountantEmail(method = 'gmail') {
     const emailInput = document.getElementById('acc-email');
     const ccInput = document.getElementById('acc-cc');
     const subjectInput = document.getElementById('acc-subject');
@@ -1879,20 +1946,57 @@ function dispatchAccountantEmail(method = 'client') {
     const cc = ccInput ? ccInput.value.trim() : '';
     const subject = subjectInput && subjectInput.value ? subjectInput.value.trim() : 'Reiseregning 2026';
     const comment = commentInput ? commentInput.value.trim() : '';
-
     const bodyText = generateAccountantEmailText(comment);
 
-    // Build mailto URI
-    let mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}`;
-    if (cc) {
-        mailtoUrl += `&cc=${encodeURIComponent(cc)}`;
+    // Kopier alltid hele teksten til utklippstavlen som pålitelig backup
+    copyToClipboardSilent(bodyText);
+
+    if (method === 'gmail') {
+        let gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
+        if (cc) gmailUrl += `&cc=${encodeURIComponent(cc)}`;
+        gmailUrl += `&su=${encodeURIComponent(subject)}`;
+        gmailUrl += `&body=${encodeURIComponent(bodyText)}`;
+
+        const win = window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+            showToast("Gmail-vinduet ble blokkert av nettleserens popup-stopper. Teksten er kopiert til utklippstavlen!", "warning");
+        } else {
+            showToast("Gmail åpnet i ny fane med ferdig utfylt spesifikasjon! (Teksten er også kopiert)", "success");
+        }
+    } else if (method === 'outlook') {
+        let outlookUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(email)}`;
+        if (cc) outlookUrl += `&cc=${encodeURIComponent(cc)}`;
+        outlookUrl += `&subject=${encodeURIComponent(subject)}`;
+        outlookUrl += `&body=${encodeURIComponent(bodyText)}`;
+
+        const win = window.open(outlookUrl, '_blank', 'noopener,noreferrer');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+            showToast("Outlook-vinduet ble blokkert av popup-stopper. Teksten er kopiert til utklippstavlen!", "warning");
+        } else {
+            showToast("Outlook på nett åpnet med ferdig utfylt spesifikasjon! (Teksten er også kopiert)", "success");
+        }
+    } else if (method === 'client') {
+        // Desktop mail program - hold tekststørrelse trygg under 1800 tegn for å unngå OS url-krasj
+        let safeBody = bodyText;
+        if (safeBody.length > 1800) {
+            safeBody = safeBody.substring(0, 1750) + "\n\n[... Fullstendig spesifikasjon er kopiert til utklippstavlen. Trykk Ctrl+V / Lim inn for å se alt ...]";
+        }
+
+        let mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}`;
+        if (cc) mailtoUrl += `&cc=${encodeURIComponent(cc)}`;
+        mailtoUrl += `&body=${encodeURIComponent(safeBody)}`;
+
+        // Utløs via skjult lenke med target="_self" (aldri _blank for å unngå tomt Chrome-vindu)
+        const a = document.createElement('a');
+        a.href = mailtoUrl;
+        a.target = '_self';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 1000);
+
+        showToast("E-postprogram forsøkes åpnet! Teksten er også kopiert til utklippstavlen (Ctrl+V).", "info");
     }
-    mailtoUrl += `&body=${encodeURIComponent(bodyText)}`;
-
-    // Open mail client
-    window.location.href = mailtoUrl;
-
-    showToast("E-postprogrammet ditt åpnes nå med ferdig utfylt reiseregning!", "success");
 }
 
 function copyAccountantSummary() {
@@ -1902,7 +2006,7 @@ function copyAccountantSummary() {
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(bodyText).then(() => {
-            showToast("Regnskapssammendraget er kopiert til utklippstavlen!", "success");
+            showToast("Hele spesifikasjonen er kopiert til utklippstavlen! Du kan nå lime den rett inn.", "success");
         }).catch(() => {
             fallbackCopyText(bodyText);
         });
@@ -1920,9 +2024,9 @@ function fallbackCopyText(text) {
     ta.select();
     try {
         document.execCommand('copy');
-        showToast("Regnskapssammendraget er kopiert til utklippstavlen!", "success");
+        showToast("Hele spesifikasjonen er kopiert til utklippstavlen!", "success");
     } catch (e) {
-        showToast("Kunne ikke kopiere automatisk. Vennligst marker og kopier teksten manuelt.", "error");
+        showToast("Kunne ikke kopiere automatisk. Marker og kopier teksten fra forhåndsvisningen under.", "error");
     }
     document.body.removeChild(ta);
 }

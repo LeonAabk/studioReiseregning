@@ -1043,6 +1043,130 @@ td input:focus {
 .badge-paid { background: var(--success-subtle); color: var(--success-color); border: 1px solid var(--success-border); }
 .badge-rejected { background: var(--danger-subtle); color: var(--danger-color); border: 1px solid var(--danger-border); }
 
+/* Accountant Email Dispatch Channels */
+.email-channel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.btn-email-channel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid transparent;
+    position: relative;
+    user-select: none;
+}
+
+.btn-email-channel:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-email-channel:active {
+    transform: translateY(0);
+}
+
+.btn-email-channel .channel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.btn-email-channel .channel-sub {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    margin-left: 24px;
+}
+
+.btn-email-channel.gmail {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+.btn-email-channel.gmail:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+}
+
+.btn-email-channel.outlook {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+.btn-email-channel.outlook:hover {
+    background: #dbeafe;
+    border-color: #60a5fa;
+}
+
+.btn-email-channel.client {
+    background: #f8fafc;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+.btn-email-channel.client:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.btn-email-channel.copy-direct {
+    background: var(--accent-subtle);
+    color: var(--accent-color);
+    border-color: var(--accent-border);
+}
+.btn-email-channel.copy-direct:hover {
+    background: #dbeafe;
+    border-color: var(--accent-color);
+}
+
+.email-preview-box {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: #ffffff;
+    overflow: hidden;
+    margin-top: 14px;
+}
+
+.email-preview-header {
+    background: #f8fafc;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.email-preview-textarea {
+    width: 100%;
+    min-height: 120px;
+    max-height: 240px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    padding: 10px 14px;
+    border: none;
+    resize: vertical;
+    color: #334155;
+    background: #fafafa;
+    box-sizing: border-box;
+}
+
+.email-preview-textarea:focus {
+    outline: none;
+    background: #ffffff;
+}
+
 /* Signature Canvas */
 #sig-canvas {
     background: #ffffff;
