@@ -1,0 +1,8 @@
+{
+  "name": "Reiseregning - Statens Satser",
+  "description": "Reiseregning for statens satser 2026 med diett, kjøregodtgjørelse, utlegg og bedriftsportal.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

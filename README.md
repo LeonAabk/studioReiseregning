@@ -1,11 +1,53 @@
-<div align="center">
+﻿# Reiseregning Kalkulator
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+En moderne, brukervennlig webapplikasjon for å beregne reiseregninger basert på norske statens satser (2026).
 
-  <h1>Built with AI Studio</h2>
+## Funksjoner
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Automatiske beregninger**: Kjøregodtgjørelse, diettgodtgjørelse og utlegg
+- **Diettberegning**: Automatisk beregning basert på reisetid og overnattingstype
+- **Måltidstrekk**: Mulighet for å trekke fra dekket måltider
+- **Signatur**: Tegn signatur digitalt eller last opp bilde
+- **Lagring**: Lagre reiseregninger lokalt i nettleseren
+- **PDF-utskrift**: Skriv ut som PDF for arkivering
+- **Responsiv design**: Fungerer på desktop, nettbrett og mobil
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Teknologier
 
-</div>
+- HTML5
+- CSS3 (med moderne layout og responsive design)
+- Vanilla JavaScript (ingen rammeverk)
+- localStorage for lagring
+- Canvas API for digital signatur
+
+## Installasjon
+
+1. Last ned filene
+2. Åpne `index.html` i en moderne nettleser
+3. Applikasjonen kjører lokalt uten behov for server
+
+## Bruk
+
+1. Fyll inn personopplysninger
+2. Angi reiseinformasjon (datoer, formål, overnatting)
+3. Legg til kjøregodtgjørelse og utlegg
+4. Kryss av for måltidstrekk hvis relevant
+5. Tegn signatur eller last opp bilde
+6. Lagre eller skriv ut som PDF
+
+## Validering
+
+Applikasjonen inkluderer validering av:
+- Obligatoriske felt
+- Gyldige datoer
+- Numeriske verdier
+- Logiske forhold (f.eks. hjemkomst etter avreise)
+
+## Lagring
+
+Reiseregninger lagres automatisk i nettleserens localStorage. Du kan:
+- Lagre nye reiseregninger
+- Laste tidligere reiseregninger
+- Slette gamle reiseregninger
+
+
