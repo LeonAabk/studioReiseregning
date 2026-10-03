@@ -30,6 +30,142 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function initDemoPortal() {
+    window.isDemoMode = true;
+    currentUser = { id: 'demo_admin_1', email: 'daglig.leder@nordicsolutions.no' };
+    currentCompany = {
+        company_id: 'demo_co_1',
+        role: 'admin',
+        company_name: 'Nordic Solutions AS (Demo)',
+        join_code: 'NORD26'
+    };
+    currentCompanyMembers = [
+        { user_id: 'demo_admin_1', user_email: 'daglig.leder@nordicsolutions.no', role: 'admin' },
+        { user_id: 'demo_emp_1', user_email: 'kari.konsulent@nordicsolutions.no', role: 'ansatt' },
+        { user_id: 'demo_emp_2', user_email: 'ola.nordmann@nordicsolutions.no', role: 'ansatt' },
+        { user_id: 'demo_emp_3', user_email: 'per.utvikler@nordicsolutions.no', role: 'ansatt' }
+    ];
+
+    window.demoReports = [
+        {
+            id: 'demo_rep_1',
+            created_at: '2026-10-02T09:30:00.000Z',
+            trip_name: 'Kundemøte og leveranse Bergen',
+            user_id: 'demo_emp_1',
+            employeeEmail: 'kari.konsulent@nordicsolutions.no',
+            status: 'innsendt',
+            report_data: {
+                personalInfo: {
+                    name: 'Kari Konsulent',
+                    company: 'Nordic Solutions AS',
+                    department: 'Rådgivning',
+                    id: '1042'
+                },
+                travelInfo: {
+                    purpose: 'Kundemøte og implementering hos Helse Vest',
+                    event: 'Leveransemøte Q3',
+                    departure: '2026-10-01 07:30',
+                    return: '2026-10-03 16:30',
+                    accommodationName: 'Radisson Blu Hotel Norge, Bergen'
+                },
+                dietSummary: {
+                    text: '2 fulle døgn og overskytende 9t. Måltidstrekk frokost.',
+                    amount: 2288
+                },
+                mileage: [
+                    { date: '2026-10-01 07:30', from: 'Oslo', to: 'Bergen', km: 465, passenger: 'Ole Hansen', toll: 280 },
+                    { date: '2026-10-03 12:00', from: 'Bergen', to: 'Oslo', km: 465, passenger: '', toll: 280 }
+                ],
+                expenses: [
+                    { date: '2026-10-02', description: 'Parkering ByGarasjen Bergen (2 døgn)', amount: 580, receipt: true },
+                    { date: '2026-10-02', description: 'Drosje til kveldsarrangement', amount: 240, receipt: true }
+                ],
+                totals: { grandTotal: 8597 }
+            }
+        },
+        {
+            id: 'demo_rep_2',
+            created_at: '2026-10-02T14:15:00.000Z',
+            trip_name: 'Høringsmøte Oslo',
+            user_id: 'demo_emp_2',
+            employeeEmail: 'ola.nordmann@nordicsolutions.no',
+            status: 'innsendt',
+            report_data: {
+                personalInfo: {
+                    name: 'Ola Nordmann',
+                    company: 'Nordic Solutions AS',
+                    department: 'Teknologi',
+                    id: '1088'
+                },
+                travelInfo: {
+                    purpose: 'Møte i departementet angående IT-standarder',
+                    departure: '2026-10-02 06:45',
+                    return: '2026-10-02 21:00'
+                },
+                dietSummary: {
+                    text: 'Dagsdiett over 12t. Trekk for lunsj.',
+                    amount: 515
+                },
+                mileage: [],
+                expenses: [
+                    { date: '2026-10-02', description: 'Togbillett Vy Tønsberg - Oslo S t/r', amount: 540, receipt: true },
+                    { date: '2026-10-02', description: 'Ruter dagsbillett', amount: 131, receipt: true }
+                ],
+                totals: { grandTotal: 1186 }
+            }
+        },
+        {
+            id: 'demo_rep_3',
+            created_at: '2026-09-28T11:00:00.000Z',
+            trip_name: 'Fagseminar NTNU Trondheim',
+            user_id: 'demo_emp_3',
+            employeeEmail: 'per.utvikler@nordicsolutions.no',
+            status: 'godkjent',
+            report_data: {
+                personalInfo: {
+                    name: 'Per Utvikler',
+                    company: 'Nordic Solutions AS',
+                    department: 'Utvikling',
+                    id: '1095'
+                },
+                travelInfo: {
+                    purpose: 'Fagseminar om maskinlæring og skyarkitektur',
+                    departure: '2026-09-25 08:00',
+                    return: '2026-09-26 18:00'
+                },
+                totals: { grandTotal: 3410 }
+            }
+        },
+        {
+            id: 'demo_rep_4',
+            created_at: '2026-09-20T16:00:00.000Z',
+            trip_name: 'Nettverkskonferanse Lillestrøm',
+            user_id: 'demo_emp_2',
+            employeeEmail: 'ola.nordmann@nordicsolutions.no',
+            status: 'utbetalt',
+            report_data: {
+                personalInfo: {
+                    name: 'Ola Nordmann',
+                    company: 'Nordic Solutions AS',
+                    department: 'Teknologi',
+                    id: '1088'
+                },
+                travelInfo: {
+                    purpose: 'Deltakelse på Norway Tech Summit',
+                    departure: '2026-09-20 08:00',
+                    return: '2026-09-20 17:00'
+                },
+                totals: { grandTotal: 890 }
+            }
+        }
+    ];
+
+    renderDashboard();
+    if (typeof showToast === 'function') {
+        showToast("Interaktiv demo-modus aktivert!", "info");
+    }
+}
+
 function showReportModal(report) {
     const overlay = document.getElementById('report-modal-overlay');
     const body = document.getElementById('report-modal-body');
@@ -277,12 +413,24 @@ async function renderDashboard() {
     const container = document.getElementById('dashboard-app');
     if (!container) return;
 
-    if (!currentUser) {
+    if (!currentUser && !window.isDemoMode) {
         container.innerHTML = `
-            <div class="empty-state">
-                <h2>Krever innlogging</h2>
-                <p>Du må være logget inn for å se bedriftsportalen.</p>
-                <a href="index.html" class="btn btn-primary" style="text-decoration: none;">Gå til innlogging</a>
+            <div class="card" style="text-align: center; max-width: 620px; margin: 40px auto; padding: 40px 28px;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent-subtle); color: var(--accent-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                </div>
+                <h2 style="margin-bottom: 8px;">Velkommen til Bedriftsportalen</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; line-height: 1.5;">
+                    Her kan ledere og regnskap godkjenne ansattes reiseregninger, følge med på utbetalinger og administrere firmaet. Du kan koble til din egen bedriftskonto eller utforske portalen i en full interaktiv demonstrasjon.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary" onclick="initDemoPortal()">
+                        Start interaktiv demo &rarr;
+                    </button>
+                    <a href="index.html" class="btn btn-outline">
+                        Gå til innlogging
+                    </a>
+                </div>
             </div>
         `;
         return;
@@ -712,44 +860,49 @@ async function fetchAdminDashboardData() {
     const statSum = document.getElementById('stat-total-sum');
 
     try {
-        // Fetch Members
-        const { data: members, error: membersError } = await supabaseClient
-            .from('company_members')
-            .select('*')
-            .eq('company_id', currentCompany.company_id);
+        let members = [];
+        let reports = [];
 
-        if (membersError) throw membersError;
+        if (window.isDemoMode) {
+            members = currentCompanyMembers || [];
+            reports = window.demoReports || [];
+        } else {
+            // Fetch Members
+            const { data: mData, error: membersError } = await supabaseClient
+                .from('company_members')
+                .select('*')
+                .eq('company_id', currentCompany.company_id);
 
-        if (members) {
-            currentCompanyMembers = members;
+            if (membersError) throw membersError;
+            members = mData || [];
+
+            // Fetch Reports
+            const { data: rData, error: reportsError } = await supabaseClient
+                .from('expense_reports')
+                .select('*')
+                .eq('company_id', currentCompany.company_id)
+                .order('created_at', { ascending: false });
+
+            if (reportsError) throw reportsError;
+            reports = rData || [];
         }
 
-        if (statMembers) statMembers.textContent = members ? members.length : 0;
+        currentCompanyMembers = members;
 
-        // Fetch Reports
-        const { data: reports, error: reportsError } = await supabaseClient
-            .from('expense_reports')
-            .select('*')
-            .eq('company_id', currentCompany.company_id)
-            .order('created_at', { ascending: false });
-
-        if (reportsError) throw reportsError;
-
-        if (statReports) statReports.textContent = reports ? reports.length : 0;
+        if (statMembers) statMembers.textContent = members.length;
+        if (statReports) statReports.textContent = reports.length;
 
         const statActionRequired = document.getElementById('stat-action-required');
         if (statActionRequired) {
-            statActionRequired.textContent = reports ? reports.filter(r => r.status === 'innsendt').length : 0;
+            statActionRequired.textContent = reports.filter(r => r.status === 'innsendt').length;
         }
 
         let totalCompanySum = 0;
-        if (reports) {
-            reports.forEach(r => {
-                if (r.status === 'utbetalt' && r.report_data && r.report_data.totals) {
-                    totalCompanySum += r.report_data.totals.grandTotal;
-                }
-            });
-        }
+        reports.forEach(r => {
+            if (r.status === 'utbetalt' && r.report_data && r.report_data.totals) {
+                totalCompanySum += r.report_data.totals.grandTotal;
+            }
+        });
 
         const memberEmails = {};
         if (members) {
@@ -947,6 +1100,16 @@ async function fetchAdminDashboardData() {
 }
 
 async function updateReportStatus(reportId, newStatus) {
+    if (window.isDemoMode) {
+        const report = window.demoReports ? window.demoReports.find(r => r.id === reportId) : null;
+        if (report) {
+            report.status = newStatus;
+            showToast(`Status oppdatert til ${newStatus} (Demo)!`, "success");
+            await fetchAdminDashboardData();
+            return true;
+        }
+    }
+
     try {
         const { error } = await supabaseClient
             .from('expense_reports')
@@ -965,12 +1128,27 @@ async function updateReportStatus(reportId, newStatus) {
     }
 }
 
-
 async function rejectReport(reportId) {
     const comment = await showPrompt("Skriv en begrunnelse for avvisning (påkrevd):");
     if (!comment || comment.trim() === '') {
         showToast("Begrunnelse er påkrevd for å avvise.", "error");
         return;
+    }
+
+    if (window.isDemoMode) {
+        const report = window.demoReports ? window.demoReports.find(r => r.id === reportId) : null;
+        if (report) {
+            report.status = 'avvist';
+            report.admin_comment = comment;
+            showToast("Reiseregning avvist (Demo).", "success");
+            await fetchAdminDashboardData();
+            const overlay = document.getElementById('report-modal-overlay');
+            if (overlay && overlay.style.display !== 'none') {
+                overlay.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }
+            return;
+        }
     }
 
     try {

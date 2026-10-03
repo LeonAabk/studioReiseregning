@@ -4,6 +4,11 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Redirect any legacy dashboard routes to root since company portal is disabled
+app.get(['/dashboard', '/dashboard.html'], (req, res) => {
+  res.redirect('/');
+});
+
 // Serve static assets with html extension support
 app.use(express.static(path.join(__dirname), {
   extensions: ['html', 'htm']
