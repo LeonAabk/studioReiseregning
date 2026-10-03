@@ -631,13 +631,8 @@ function collectFormData() {
     }; 
 }
 
-function previewExpenseReport() {
-    const data = collectFormData();
-    if (!data.personalInfo.name || !data.travelInfo.purpose) {
-        showToast("Vennligst fyll ut navn og formål før forhåndsvisning.", "error");
-        return;
-    }
-
+function generateExpenseReportDocumentHTML(customData = null) {
+    const data = customData || collectFormData();
     const diet = calculateDiet();
     let totalM = data.mileage.reduce((sum, i) => sum + (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll, 0);
     let totalE = data.expenses.reduce((sum, i) => sum + i.amount, 0);
@@ -658,6 +653,248 @@ function previewExpenseReport() {
         ${data.personalInfo.account ? `<p style="margin: 2px 0 0 0; color: #0f172a; font-weight: 600; font-size: 0.85rem;">Kontonr: ${escapeHTML(data.personalInfo.account)}</p>` : ''}
     </div>`;
 
+    return `
+        <div class="expense-report-document" style="color: #0f172a; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; line-height: 1.5; padding: 10px; background: #ffffff;">
+            <div class="document-header" style="border-bottom: 2px solid #0f172a; display: flex; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px;">
+                <div>
+                    <h1 style="font-size: 1.5rem; margin: 0; letter-spacing: -0.02em;">REISEREGNING 2026</h1>
+                    <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Beregnet etter Statens satser</p>
+                </div>
+                ${companyHeader}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Ansattinformasjon</span>
+                    <p style="margin: 4px 0 0 0; font-weight: 700; color: #0f172a;">${escapeHTML(data.personalInfo.name)}</p>
+                    <p style="margin: 2px 0 0 0; font-size: 0.88rem; color: #475569;">${escapeHTML(data.personalInfo.address) || 'Ingen adresse oppgitt'}</p>
+                </div>
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Reiseopplysninger</span>
+                    <p style="margin: 4px 0 0 0;"><strong>Formål:</strong> ${escapeHTML(data.travelInfo.purpose)}</p>
+                    ${data.travelInfo.event ? `<p style="margin: 2px 0 0 0;"><strong>Arrangement:</strong> ${escapeHTML(data.travelInfo.event)}</p>` : ''}
+                    <p style="margin: 2px 0 0 0; font-size: 0.88rem; color: #475569;">
+                        <strong>Periode:</strong> ${escapeHTML(data.travelInfo.departure)} &ndash; ${escapeHTML(data.travelInfo.return)}
+                    </p>
+                    ${data.travelInfo.accommodationName ? `<p style="margin: 2px 0 0 0; font-size: 0.88rem; color: #475569;"><strong>Overnatting:</strong> ${escapeHTML(data.travelInfo.accommodationName)}</p>` : ''}
+                </div>
+            </div>
+
+            <!-- Diettseksjon -->
+            <div class="doc-section" style="margin-bottom: 24px;">
+                <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">Diettgodtgjørelse</div>
+                <div style="padding: 12px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 16px;">
+                    <p style="margin: 0; font-size: 0.92rem;"><strong>Spesifikasjon:</strong> ${escapeHTML(diet.text)}</p>
+                    <p style="margin: 6px 0 0 0; font-weight: 700; color: #0f172a;">Sum diett: ${currencyFormatter.format(diet.amount)}</p>
+                </div>
+            </div>
+
+            <!-- Kjøring -->
+            ${data.mileage && data.mileage.length > 0 && data.mileage.some(m => m.km > 0) ? `
+            <div class="doc-section" style="margin-bottom: 24px;">
+                <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">Kjøregodtgjørelse (5,30 kr/km)</div>
+                <div class="table-responsive">
+                    <table class="expense-table" style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
+                                <th style="padding: 8px; text-align: left;">Dato</th>
+                                <th style="padding: 8px; text-align: left;">Rute (Fra &ndash; Til)</th>
+                                <th style="padding: 8px; text-align: right;">Km</th>
+                                <th style="padding: 8px; text-align: left;">Passasjer (+1 kr/km)</th>
+                                <th style="padding: 8px; text-align: right;">Bom (kr)</th>
+                                <th style="padding: 8px; text-align: right;">Sum etappe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.mileage.map(i => {
+                                const routeSum = (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll;
+                                return `
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 8px;">${escapeHTML(i.date)}</td>
+                                    <td style="padding: 8px;">${escapeHTML(i.from)} &ndash; ${escapeHTML(i.to)}</td>
+                                    <td style="padding: 8px; text-align: right;">${escapeHTML(i.km)} km</td>
+                                    <td style="padding: 8px;">${escapeHTML(i.passenger) || '-'}</td>
+                                    <td style="padding: 8px; text-align: right;">${currencyFormatter.format(i.toll)}</td>
+                                    <td style="padding: 8px; text-align: right; font-weight: 600;">${currencyFormatter.format(routeSum)}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Andre Utlegg -->
+            ${data.expenses && data.expenses.length > 0 && data.expenses.some(e => e.amount > 0 || e.description) ? `
+            <div class="doc-section" style="margin-bottom: 24px;">
+                <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">Andre Utlegg</div>
+                <div class="table-responsive">
+                    <table class="expense-table" style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc;">
+                                <th style="padding: 8px; text-align: left;">Dato</th>
+                                <th style="padding: 8px; text-align: left;">Beskrivelse</th>
+                                <th style="padding: 8px; text-align: center;">Kvittering?</th>
+                                <th style="padding: 8px; text-align: right;">Beløp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.expenses.map(e => `
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 8px;">${escapeHTML(e.date)}</td>
+                                    <td style="padding: 8px;">${escapeHTML(e.description)}</td>
+                                    <td style="padding: 8px; text-align: center;">${e.receipt ? 'Ja' : 'Nei'}</td>
+                                    <td style="padding: 8px; text-align: right; font-weight: 600;">${currencyFormatter.format(e.amount)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Total til utbetaling -->
+            <div class="summary-row" style="margin-top: 20px; padding: 14px 16px; background: #f8fafc; border: 2px solid #0f172a; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 1rem; color: #0f172a;">TOTALT TIL UTBETALING:</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; font-weight: 800; color: #0f172a;">${currencyFormatter.format(grandTotal)}</span>
+            </div>
+
+            <!-- Signatur -->
+            <div class="signature-section" style="margin-top: 35px; display: flex; justify-content: space-between; align-items: flex-end; gap: 30px;">
+                <div>
+                    <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 4px;">Dato og sted:</p>
+                    <p style="font-weight: 700; margin: 0;">${escapeHTML(data.finalDatePlace) || 'Sted og dato ikke fylt ut'}</p>
+                </div>
+                <div>
+                    <div class="sig-box" style="border-bottom: 1px solid #0f172a; min-width: 200px; min-height: 50px; display: flex; align-items: center; justify-content: center;">
+                        ${sigImg || '<span style="color:#94a3b8; font-size:0.8rem;">[Uten signatur]</span>'}
+                    </div>
+                    <p style="font-size: 0.82rem; color: #475569; margin: 4px 0 0 0; text-align: center;">
+                        ${escapeHTML(data.personalInfo.name)}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Kvitteringsvedlegg for print -->
+            ${data.receipts && data.receipts.length > 0 ? `
+            <div class="receipts-section" style="page-break-before: always; padding-top: 24px; margin-top: 30px; border-top: 1px dashed #cbd5e1;">
+                <div class="doc-section-title" style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 16px;">Vedlegg / Kvitteringer (${data.receipts.length} stk)</div>
+                <div style="display: flex; flex-direction: column; gap: 24px; align-items: center;">
+                    ${data.receipts.map((src, idx) => `
+                        <div style="text-align: center; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; max-width: 100%;">
+                            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">Kvitteringsvedlegg #${idx + 1}</p>
+                            <img src="${escapeHTML(src)}" style="max-width: 100%; max-height: 750px; object-fit: contain;">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+let isGeneratingPdf = false;
+let lastDownloadedPdfName = null;
+
+async function generatePDFBlob() {
+    const data = collectFormData();
+    const safeName = (data.personalInfo.name || 'Ansatt').replace(/[^a-zA-Z0-9æøåÆØÅ_-]/g, '_');
+    const safeDate = (data.travelInfo.departure || '2026').replace(/[^0-9-]/g, '_');
+    const filename = `Reiseregning_${safeName}_${safeDate}.pdf`;
+
+    const container = document.createElement('div');
+    container.innerHTML = generateExpenseReportDocumentHTML(data);
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '794px';
+    container.style.background = '#ffffff';
+    document.body.appendChild(container);
+
+    const opt = {
+        margin: [10, 10, 10, 10],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    try {
+        if (window.html2pdf) {
+            const pdfBlob = await window.html2pdf().set(opt).from(container).outputPdf('blob');
+            document.body.removeChild(container);
+            return { blob: pdfBlob, filename: filename };
+        } else {
+            document.body.removeChild(container);
+            return null;
+        }
+    } catch (e) {
+        if (container.parentNode) document.body.removeChild(container);
+        console.error("PDF generation error:", e);
+        return null;
+    }
+}
+
+async function downloadPDFFile(showSuccessToast = true) {
+    const data = collectFormData();
+    if (!data.personalInfo.name || !data.travelInfo.purpose) {
+        showToast("Vennligst fyll ut navn og reiseformål før du laster ned PDF.", "error");
+        return null;
+    }
+
+    if (isGeneratingPdf) {
+        showToast("PDF genereres nå, et øyeblikk...", "info");
+        return null;
+    }
+
+    isGeneratingPdf = true;
+    showToast("Genererer PDF-fil for nedlasting...", "info");
+
+    const result = await generatePDFBlob();
+    isGeneratingPdf = false;
+
+    if (result && result.blob) {
+        const url = URL.createObjectURL(result.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 2000);
+
+        lastDownloadedPdfName = result.filename;
+        if (showSuccessToast) {
+            showToast(`PDF lastet ned: ${result.filename}! Dra den rett over i e-posten.`, "success");
+        }
+        updateDownloadIndicator(result.filename);
+        return result.filename;
+    } else {
+        // Fallback til nettleserens utskriftsdialog
+        window.print();
+        return null;
+    }
+}
+
+function updateDownloadIndicator(filename) {
+    const btn = document.getElementById('btn-modal-dl-pdf');
+    const textEl = document.getElementById('modal-dl-pdf-text');
+    if (btn && textEl) {
+        btn.style.background = '#059669';
+        textEl.textContent = `✓ Lastet ned (${filename})`;
+    }
+}
+
+function previewExpenseReport() {
+    const data = collectFormData();
+    if (!data.personalInfo.name || !data.travelInfo.purpose) {
+        showToast("Vennligst fyll ut navn og formål før forhåndsvisning.", "error");
+        return;
+    }
+
+    const docHTML = generateExpenseReportDocumentHTML(data);
     const modal = document.createElement('div');
     modal.className = 'modal-overlay preview-modal-overlay';
     
@@ -667,7 +904,11 @@ function previewExpenseReport() {
                 <h2>Forhåndsvisning av Reiseregning</h2>
                 <div class="action-group">
                     <button type="button" class="btn btn-outline" onclick="exportToCSV()">Last ned CSV</button>
-                    <button type="button" class="btn btn-primary" onclick="window.print()">Skriv ut / PDF</button>
+                    <button type="button" class="btn btn-primary" onclick="downloadPDFFile()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Last ned PDF
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="window.print()" title="Skriv ut eller lagre via nettleserens utskriftsdialog">Skriv ut</button>
                     <button type="button" class="btn btn-success" onclick="closeModal(); openSendToAccountantModal();" title="Send reiseregningen ferdig spesifisert til regnskapsfører">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                         Send til regnskap
@@ -676,142 +917,7 @@ function previewExpenseReport() {
                 </div>
             </div>
             <div class="modal-body" id="preview-content">
-                <div class="expense-report-document">
-                    <div class="document-header">
-                        <div>
-                            <h1>REISEREGNING 2026</h1>
-                            <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Beregnet etter Statens satser</p>
-                        </div>
-                        ${companyHeader}
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-                        <div>
-                            <span class="doc-meta-label">Ansattinformasjon</span>
-                            <p style="margin: 4px 0 0 0; font-weight: 700; color: #0f172a;">${escapeHTML(data.personalInfo.name)}</p>
-                            <p style="margin: 2px 0 0 0; font-size: 0.88rem; color: #475569;">${escapeHTML(data.personalInfo.address) || 'Ingen adresse oppgitt'}</p>
-                        </div>
-                        <div>
-                            <span class="doc-meta-label">Reiseopplysninger</span>
-                            <p style="margin: 4px 0 0 0;"><strong>Formål:</strong> ${escapeHTML(data.travelInfo.purpose)}</p>
-                            ${data.travelInfo.event ? `<p style="margin: 2px 0 0 0;"><strong>Arrangement:</strong> ${escapeHTML(data.travelInfo.event)}</p>` : ''}
-                            <p style="margin: 2px 0 0 0; font-size: 0.88rem; color: #475569;">
-                                <strong>Periode:</strong> ${escapeHTML(data.travelInfo.departure)} &ndash; ${escapeHTML(data.travelInfo.return)}
-                            </p>
-                            ${data.travelInfo.accommodationName ? `<p style="margin: 2px 0 0 0; font-size: 0.88rem; color: #475569;"><strong>Overnatting:</strong> ${escapeHTML(data.travelInfo.accommodationName)}</p>` : ''}
-                        </div>
-                    </div>
-
-                    <!-- Diettseksjon -->
-                    <div class="doc-section">
-                        <div class="doc-section-title">Diettgodtgjørelse</div>
-                        <div style="padding: 12px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 16px;">
-                            <p style="margin: 0; font-size: 0.92rem;"><strong>Spesifikasjon:</strong> ${escapeHTML(diet.text)}</p>
-                            <p style="margin: 6px 0 0 0; font-weight: 700; color: #0f172a;">Sum diett: ${currencyFormatter.format(diet.amount)}</p>
-                        </div>
-                    </div>
-
-                    <!-- Kjøring -->
-                    ${data.mileage && data.mileage.length > 0 && data.mileage.some(m => m.km > 0) ? `
-                    <div class="doc-section">
-                        <div class="doc-section-title">Kjøregodtgjørelse (5,30 kr/km)</div>
-                        <div class="table-responsive">
-                            <table class="expense-table">
-                                <thead>
-                                    <tr>
-                                        <th>Dato</th>
-                                        <th>Rute (Fra &ndash; Til)</th>
-                                        <th style="text-align: right;">Km</th>
-                                        <th>Passasjer (+1 kr/km)</th>
-                                        <th style="text-align: right;">Bom (kr)</th>
-                                        <th style="text-align: right;">Sum etappe</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${data.mileage.map(i => {
-                                        const routeSum = (i.km * (i.passenger.length > 0 ? RATES.km + RATES.passenger : RATES.km)) + i.toll;
-                                        return `
-                                        <tr>
-                                            <td>${escapeHTML(i.date)}</td>
-                                            <td>${escapeHTML(i.from)} &ndash; ${escapeHTML(i.to)}</td>
-                                            <td style="text-align: right;">${escapeHTML(i.km)} km</td>
-                                            <td>${escapeHTML(i.passenger) || '-'}</td>
-                                            <td style="text-align: right;">${currencyFormatter.format(i.toll)}</td>
-                                            <td style="text-align: right; font-weight: 600;">${currencyFormatter.format(routeSum)}</td>
-                                        </tr>`;
-                                    }).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <!-- Andre Utlegg -->
-                    ${data.expenses && data.expenses.length > 0 && data.expenses.some(e => e.amount > 0 || e.description) ? `
-                    <div class="doc-section">
-                        <div class="doc-section-title">Andre Utlegg</div>
-                        <div class="table-responsive">
-                            <table class="expense-table">
-                                <thead>
-                                    <tr>
-                                        <th>Dato</th>
-                                        <th>Beskrivelse</th>
-                                        <th style="text-align: center;">Kvittering?</th>
-                                        <th style="text-align: right;">Beløp</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${data.expenses.map(e => `
-                                        <tr>
-                                            <td>${escapeHTML(e.date)}</td>
-                                            <td>${escapeHTML(e.description)}</td>
-                                            <td style="text-align: center;">${e.receipt ? 'Ja' : 'Nei'}</td>
-                                            <td style="text-align: right; font-weight: 600;">${currencyFormatter.format(e.amount)}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <!-- Total til utbetaling -->
-                    <div class="summary-row">
-                        <span>TOTALT TIL UTBETALING:</span>
-                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; color: #0f172a;">${currencyFormatter.format(grandTotal)}</span>
-                    </div>
-
-                    <!-- Signatur -->
-                    <div class="signature-section" style="margin-top: 35px; display: flex; justify-content: space-between; align-items: flex-end; gap: 30px;">
-                        <div>
-                            <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 4px;">Dato og sted:</p>
-                            <p style="font-weight: 700; margin: 0;">${escapeHTML(data.finalDatePlace) || 'Sted og dato ikke fylt ut'}</p>
-                        </div>
-                        <div>
-                            <div class="sig-box" style="display: flex; align-items: center; justify-content: center;">
-                                ${sigImg || '<span style="color:#94a3b8; font-size:0.8rem;">[Uten signatur]</span>'}
-                            </div>
-                            <p style="font-size: 0.82rem; color: #475569; margin: 4px 0 0 0; text-align: center;">
-                                ${escapeHTML(data.personalInfo.name)}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Kvitteringsvedlegg for print -->
-                    ${data.receipts && data.receipts.length > 0 ? `
-                    <div class="receipts-section" style="page-break-before: always; padding-top: 24px;">
-                        <div class="doc-section-title">Vedlegg / Kvitteringer (${data.receipts.length} stk)</div>
-                        <div style="display: flex; flex-direction: column; gap: 24px; align-items: center;">
-                            ${data.receipts.map((src, idx) => `
-                                <div style="text-align: center; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; max-width: 100%;">
-                                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">Kvitteringsvedlegg #${idx + 1}</p>
-                                    <img src="${escapeHTML(src)}" style="max-width: 100%; max-height: 750px; object-fit: contain;">
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
-                </div>
+                ${docHTML}
             </div>
         </div>`;
 
@@ -1797,7 +1903,7 @@ function openSendToAccountantModal() {
                 </div>
 
                 <!-- Sammendragskort -->
-                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 16px;">
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <strong style="font-size: 0.82rem; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.03em;">Oppsummering som oversendes:</strong>
                         <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--success-color); font-size: 1.15rem;">${currencyFormatter.format(grandTotal)}</span>
@@ -1812,6 +1918,23 @@ function openSendToAccountantModal() {
                             <span>Utlegg: <strong>${currencyFormatter.format(totalE)}</strong></span>
                             <span>Vedlegg: <strong>${data.receipts.length} stk</strong></span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- PDF Vedleggs-veileder -->
+                <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.1rem; line-height: 1;">📎</span>
+                            <strong style="font-size: 0.88rem; color: #166534;">Vedlegg til regnskap: Slik legger du ved PDF-en</strong>
+                        </div>
+                        <button type="button" class="btn btn-small" id="btn-modal-dl-pdf" onclick="downloadPDFFile()" style="background: #16a34a; color: #ffffff; border: none; font-weight: 700; font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span id="modal-dl-pdf-text">Last ned PDF nå</span>
+                        </button>
+                    </div>
+                    <div style="font-size: 0.81rem; color: #15803d; line-height: 1.45;">
+                        <span>Når du trykker <strong>«Åpne i Gmail»</strong> eller <strong>«Åpne i Outlook»</strong>, lastes PDF-en automatisk ned. <strong>Dra den nedlastede filen rett over</strong> fra Chrome-nedlastinger og inn i e-postvinduet, eller trykk på binders-ikonet 📎.</span>
                     </div>
                 </div>
 
@@ -1848,6 +1971,16 @@ function openSendToAccountantModal() {
                             <span class="channel-sub">Outlook / Apple Mail</span>
                         </button>
 
+                        ${navigator.share ? `
+                        <!-- Mobil / Deling med automatisk vedlagt fil -->
+                        <button type="button" class="btn-email-channel share-native" onclick="shareWithAccountantWithAttachment()" title="Genererer PDF og legger den automatisk ved via enhetens delefunksjon">
+                            <div class="channel-header">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                <span>Del med PDF</span>
+                            </div>
+                            <span class="channel-sub">Legger ved PDF automatisk</span>
+                        </button>` : ''}
+
                         <!-- Kopier tekst direkte -->
                         <button type="button" class="btn-email-channel copy-direct" onclick="copyAccountantSummary()" title="Kopier hele den ferdige spesifikasjonen med ett klikk">
                             <div class="channel-header">
@@ -1883,19 +2016,18 @@ function openSendToAccountantModal() {
 
                 <!-- Vedleggsknapper -->
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-outline btn-small" onclick="downloadPDFFile()" title="Last ned PDF-blankett direkte" style="flex: 1; justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Last ned PDF-blankett
+                    </button>
                     <button type="button" class="btn btn-outline btn-small" onclick="exportToCSV()" title="Last ned CSV-regneark som kan legges ved e-posten" style="flex: 1; justify-content: center;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Last ned CSV for regnskap
                     </button>
-                    <button type="button" class="btn btn-outline btn-small" onclick="closeModal(); previewExpenseReport();" title="Åpne PDF-blankett for utskrift eller lagring som PDF" style="flex: 1; justify-content: center;">
+                    <button type="button" class="btn btn-outline btn-small" onclick="closeModal(); previewExpenseReport();" title="Åpne forhåndsvisning i fullskjerm" style="flex: 0.8; justify-content: center;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                        Lagre som PDF for vedlegg
+                        Forhåndsvis PDF
                     </button>
-                    ${navigator.share ? `
-                    <button type="button" class="btn btn-outline btn-small" onclick="shareWithAccountant()" title="Del direkte via telefonens/nettleserens delefunksjon" style="flex: 0.8; justify-content: center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                        Del via app
-                    </button>` : ''}
                 </div>
             </div>
         </div>
@@ -1903,6 +2035,10 @@ function openSendToAccountantModal() {
 
     document.body.classList.add('modal-open');
     document.body.appendChild(modal);
+
+    if (lastDownloadedPdfName) {
+        updateDownloadIndicator(lastDownloadedPdfName);
+    }
 
     // Initialiser forhåndsvisning og lytt til endringer i kommentar
     const commentEl = document.getElementById('acc-comment');
@@ -1923,7 +2059,7 @@ function copyToClipboardSilent(text) {
     }
 }
 
-function dispatchAccountantEmail(method = 'gmail') {
+async function dispatchAccountantEmail(method = 'gmail') {
     const emailInput = document.getElementById('acc-email');
     const ccInput = document.getElementById('acc-cc');
     const subjectInput = document.getElementById('acc-subject');
@@ -1951,6 +2087,11 @@ function dispatchAccountantEmail(method = 'gmail') {
     // Kopier alltid hele teksten til utklippstavlen som pålitelig backup
     copyToClipboardSilent(bodyText);
 
+    // Last automatisk ned PDF-en hvis den ikke er lastet ned ennå i denne økten
+    if (!lastDownloadedPdfName) {
+        downloadPDFFile(false);
+    }
+
     if (method === 'gmail') {
         let gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
         if (cc) gmailUrl += `&cc=${encodeURIComponent(cc)}`;
@@ -1961,7 +2102,7 @@ function dispatchAccountantEmail(method = 'gmail') {
         if (!win || win.closed || typeof win.closed === 'undefined') {
             showToast("Gmail-vinduet ble blokkert av nettleserens popup-stopper. Teksten er kopiert til utklippstavlen!", "warning");
         } else {
-            showToast("Gmail åpnet i ny fane med ferdig utfylt spesifikasjon! (Teksten er også kopiert)", "success");
+            showToast("Gmail åpnet! PDF-filen lastes ned – bare dra den rett inn i e-posten fra Chrome.", "success");
         }
     } else if (method === 'outlook') {
         let outlookUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(email)}`;
@@ -1973,7 +2114,7 @@ function dispatchAccountantEmail(method = 'gmail') {
         if (!win || win.closed || typeof win.closed === 'undefined') {
             showToast("Outlook-vinduet ble blokkert av popup-stopper. Teksten er kopiert til utklippstavlen!", "warning");
         } else {
-            showToast("Outlook på nett åpnet med ferdig utfylt spesifikasjon! (Teksten er også kopiert)", "success");
+            showToast("Outlook på nett åpnet! PDF-filen lastes ned – bare dra den rett inn i e-posten.", "success");
         }
     } else if (method === 'client') {
         // Desktop mail program - hold tekststørrelse trygg under 1800 tegn for å unngå OS url-krasj
@@ -1995,7 +2136,53 @@ function dispatchAccountantEmail(method = 'gmail') {
         a.click();
         setTimeout(() => a.remove(), 1000);
 
-        showToast("E-postprogram forsøkes åpnet! Teksten er også kopiert til utklippstavlen (Ctrl+V).", "info");
+        showToast("E-postprogram forsøkes åpnet! PDF er lastet ned for vedlegg.", "info");
+    }
+}
+
+async function shareWithAccountantWithAttachment() {
+    const data = collectFormData();
+    if (!data.personalInfo.name || !data.travelInfo.purpose) {
+        showToast("Vennligst fyll ut minst navn og reiseformål.", "error");
+        return;
+    }
+
+    const commentInput = document.getElementById('acc-comment');
+    const comment = commentInput ? commentInput.value.trim() : '';
+    const subjectInput = document.getElementById('acc-subject');
+    const subject = subjectInput && subjectInput.value ? subjectInput.value.trim() : 'Reiseregning 2026';
+    const bodyText = generateAccountantEmailText(comment);
+
+    showToast("Genererer PDF og klargjør sending med vedlegg...", "info");
+    const result = await generatePDFBlob();
+
+    if (result && result.blob && navigator.canShare) {
+        try {
+            const pdfFile = new File([result.blob], result.filename, { type: 'application/pdf' });
+            if (navigator.canShare({ files: [pdfFile] })) {
+                await navigator.share({
+                    title: subject,
+                    text: bodyText,
+                    files: [pdfFile]
+                });
+                showToast("Reiseregningen med vedlagt PDF ble delt!", "success");
+                return;
+            }
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.warn("Fil-deling feilet, faller tilbake:", err);
+        }
+    }
+
+    // Fallback: Last ned PDF og del tekst eller åpne Gmail
+    await downloadPDFFile(false);
+    if (navigator.share) {
+        navigator.share({
+            title: subject,
+            text: bodyText
+        }).catch(() => {});
+    } else {
+        dispatchAccountantEmail('gmail');
     }
 }
 
